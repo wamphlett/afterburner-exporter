@@ -22,6 +22,8 @@ func process(file string, exporters []Exporter) {
 		return
 	}
 
+	log.Printf("processing file: %s", file)
+
 	// rename the file to stop afterburner writing to it
 	lockedFilePath := file + ".locked"
 	e := os.Rename(file, lockedFilePath)
@@ -77,13 +79,17 @@ func process(file string, exporters []Exporter) {
 			timestamp, _ := time.Parse(layout, strings.TrimSpace(record[1]))
 			for i, field := range fields {
 				// ignore any value which cant be parsed as a float
-				value, err := strconv.ParseFloat(strings.TrimSpace(record[i+2]), 64)
+				value := strings.TrimSpace(record[i+2])
+				parsedValue, err := strconv.ParseFloat(value, 64)
 				if err != nil {
+					if value != "N/A" {
+						log.Printf("skipping value which cannot be parsed: %s", value)
+					}
 					continue
 				}
 				// add the data to each exporter
 				for _, exporter := range exporters {
-					_ = exporter.AddToBatch(device, field, value, timestamp)
+					_ = exporter.AddToBatch(device, field, parsedValue, timestamp)
 				}
 			}
 		}
@@ -91,6 +97,8 @@ func process(file string, exporters []Exporter) {
 
 	// flush all the exporters
 	for _, exporter := range exporters {
-		_ = exporter.Flush()
+		if err = exporter.Flush(); err != nil {
+			log.Printf("failed to flush batch: %s", err.Error())
+		}
 	}
 }
