@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"sync"
 	"time"
 
@@ -37,7 +38,9 @@ func (i *InfluxDB2Client) AddToBatch(device, field string, value interface{}, ti
 func (i *InfluxDB2Client) Flush() error {
 	i.mutex.Lock()
 	defer i.mutex.Unlock()
-	_ = i.writer.WritePoint(context.TODO(), i.currentBatch...)
+	if err := i.writer.WritePoint(context.TODO(), i.currentBatch...); err != nil {
+		log.Printf("failed to write points to InfluxDB2: %s", err.Error())
+	}
 	// empty the current batch
 	i.currentBatch = []*write.Point{}
 	return nil
