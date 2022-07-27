@@ -29,7 +29,7 @@ func NewInfluxDB2Client(cfg *InfluxDB2Config) *InfluxDB2Client {
 func (i *InfluxDB2Client) AddToBatch(device, field string, value interface{}, timestamp time.Time) error {
 	i.mutex.Lock()
 	defer i.mutex.Unlock()
-	p := influxdb2.NewPoint("afterburner2", map[string]string{}, map[string]interface{}{field: value}, timestamp)
+	p := influxdb2.NewPoint("afterburner", map[string]string{"device": device}, map[string]interface{}{field: value}, timestamp)
 	i.currentBatch = append(i.currentBatch, p)
 	return nil
 }
