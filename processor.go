@@ -76,7 +76,11 @@ func process(file string, exporters []Exporter) {
 		// extract the values
 		case "80":
 			layout := "02-01-2006 15:04:05"
-			timestamp, _ := time.Parse(layout, strings.TrimSpace(record[1]))
+			location, err := time.LoadLocation("Europe/London")
+			if err != nil {
+				location = time.UTC
+			}
+			timestamp, _ := time.ParseInLocation(layout, strings.TrimSpace(record[1]), location)
 			for i, field := range fields {
 				// ignore any value which cant be parsed as a float
 				value := strings.TrimSpace(record[i+2])
