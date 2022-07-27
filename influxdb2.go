@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -27,14 +28,17 @@ func NewInfluxDB2Client(cfg *InfluxDB2Config) *InfluxDB2Client {
 
 func (i *InfluxDB2Client) AddToBatch(device, field string, value interface{}, timestamp time.Time) error {
 	i.mutex.Lock()
-	defer i.mutex.Lock()
-	p := influxdb2.NewPoint("afterburner", map[string]string{}, map[string]interface{}{field: value}, timestamp)
+	defer i.mutex.Unlock()
+	p := influxdb2.NewPoint("afterburner2", map[string]string{}, map[string]interface{}{field: value}, timestamp)
 	i.currentBatch = append(i.currentBatch, p)
 	return nil
 }
 
 func (i *InfluxDB2Client) Flush() error {
 	i.mutex.Lock()
-	defer i.mutex.Lock()
+	defer i.mutex.Unlock()
+	_ = i.writer.WritePoint(context.TODO(), i.currentBatch...)
+	// empty the current batch
+	i.currentBatch = []*write.Point{}
 	return nil
 }
