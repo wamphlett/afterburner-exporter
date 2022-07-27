@@ -39,6 +39,9 @@ func process(file string, exporters []Exporter) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer func() {
+		_ = f.Close()
+	}()
 
 	r := csv.NewReader(f)
 	r.FieldsPerRecord = -1
