@@ -32,5 +32,6 @@ func main() {
 
 	// wait for signal
 	<-sigs
+	p.Stop()
 	fmt.Println("stopping exporter")
 }
