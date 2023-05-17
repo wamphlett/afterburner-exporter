@@ -12,7 +12,7 @@ import (
 )
 
 type Exporter interface {
-	AddToBatch(device, field string, value interface{}, timestamp time.Time) error
+	AddToBatch(device, field string, value float64, timestamp time.Time) error
 	Flush() error
 }
 

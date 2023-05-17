@@ -7,9 +7,10 @@ import (
 )
 
 type Config struct {
-	File      string
-	Interval  time.Duration
-	InfluxDB2 *InfluxDB2Config
+	File       string
+	Interval   time.Duration
+	InfluxDB2  *InfluxDB2Config
+	MQTTConfig *MQTTConfig
 }
 
 type InfluxDB2Config struct {
@@ -53,7 +54,11 @@ func NewConfigFromFile() *Config {
 	// If there is an InfluxDB2 config, set it up
 	if cfgFile.HasSection("influxdb2") {
 		cfg.InfluxDB2 = NewInfluxDB2ConfigFromFile(cfgFile.Section("influxdb2"))
+	}
 
+	// if there is an MQTT config, set it up
+	if cfgFile.HasSection("mqtt") {
+		cfg.MQTTConfig = NewMQTTConfigFromFile(cfgFile.Section("mqtt"))
 	}
 
 	return cfg

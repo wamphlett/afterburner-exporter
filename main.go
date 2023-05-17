@@ -8,6 +8,7 @@ import (
 
 	"github.com/wamphlett/afterburner-exporter/config"
 	"github.com/wamphlett/afterburner-exporter/pkg/influxdb"
+	"github.com/wamphlett/afterburner-exporter/pkg/mqtt"
 	"github.com/wamphlett/afterburner-exporter/pkg/processor"
 )
 
@@ -25,6 +26,10 @@ func main() {
 	exporters := []processor.Exporter{}
 	if cfg.InfluxDB2 != nil {
 		exporters = append(exporters, influxdb.New(cfg.InfluxDB2))
+	}
+
+	if cfg.MQTTConfig != nil {
+		exporters = append(exporters, mqtt.New(cfg.MQTTConfig))
 	}
 
 	// create a processor

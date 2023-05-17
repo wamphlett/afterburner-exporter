@@ -28,7 +28,7 @@ func New(cfg *config.InfluxDB2Config) *Exporter {
 	}
 }
 
-func (i *Exporter) AddToBatch(device, field string, value interface{}, timestamp time.Time) error {
+func (i *Exporter) AddToBatch(device, field string, value float64, timestamp time.Time) error {
 	i.Lock()
 	defer i.Unlock()
 	p := influxdb2.NewPoint("afterburner", map[string]string{"device": device}, map[string]interface{}{field: value}, timestamp)
