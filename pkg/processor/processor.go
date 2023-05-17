@@ -1,4 +1,4 @@
-package main
+package processor
 
 import (
 	"encoding/csv"
@@ -16,17 +16,47 @@ type Exporter interface {
 	Flush() error
 }
 
-func process(file string, exporters []Exporter) {
+type Processor struct {
+	file      string
+	exporters []Exporter
+	stop      chan bool
+}
+
+func New(file string, interval time.Duration, exporters []Exporter) *Processor {
+	p := &Processor{
+		file:      file,
+		exporters: exporters,
+		stop:      make(chan bool),
+	}
+
+	go p.start(interval)
+
+	return p
+}
+
+func (p *Processor) start(interval time.Duration) {
+	ticker := time.NewTicker(interval)
+	for {
+		select {
+		case <-p.stop:
+			return
+		case <-ticker.C:
+			p.process()
+		}
+	}
+}
+
+func (p *Processor) process() {
 	// if there is no log file, return without doing anything
-	if _, err := os.Stat(file); errors.Is(err, os.ErrNotExist) {
+	if _, err := os.Stat(p.file); errors.Is(err, os.ErrNotExist) {
 		return
 	}
 
-	log.Printf("processing file: %s", file)
+	log.Printf("processing file: %s", p.file)
 
 	// rename the file to stop afterburner writing to it
-	lockedFilePath := file + ".locked"
-	e := os.Rename(file, lockedFilePath)
+	lockedFilePath := p.file + ".locked"
+	e := os.Rename(p.file, lockedFilePath)
 	if e != nil {
 		log.Fatal(e)
 	}
@@ -92,7 +122,7 @@ func process(file string, exporters []Exporter) {
 					continue
 				}
 				// add the data to each exporter
-				for _, exporter := range exporters {
+				for _, exporter := range p.exporters {
 					_ = exporter.AddToBatch(device, field, parsedValue, timestamp)
 				}
 			}
@@ -100,9 +130,13 @@ func process(file string, exporters []Exporter) {
 	}
 
 	// flush all the exporters
-	for _, exporter := range exporters {
+	for _, exporter := range p.exporters {
 		if err = exporter.Flush(); err != nil {
 			log.Printf("failed to flush batch: %s", err.Error())
 		}
 	}
+}
+
+func (p *Processor) Stop() {
+	p.stop <- true
 }
