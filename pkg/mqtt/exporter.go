@@ -41,6 +41,7 @@ func (a *aggregator) calculateAverage() {
 type Exporter struct {
 	sync.Mutex
 	client  mqtt.Client
+	topic   string
 	metrics map[string]*aggregator
 }
 
@@ -55,6 +56,7 @@ func New(cfg *config.MQTTConfig) *Exporter {
 	return &Exporter{
 		metrics: make(map[string]*aggregator),
 		client:  client,
+		topic:   cfg.Topic,
 	}
 }
 
@@ -78,6 +80,6 @@ func (e *Exporter) Flush() error {
 		return err
 	}
 
-	_ = e.client.Publish("AFTERBURNER/EXPORT", 0, false, bytes)
+	_ = e.client.Publish(e.topic, 0, false, bytes)
 	return nil
 }

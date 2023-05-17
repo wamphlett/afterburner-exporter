@@ -3,6 +3,7 @@ package config
 import "gopkg.in/ini.v1"
 
 type MQTTConfig struct {
+	Topic  string
 	Broker string
 	Port   int
 }
@@ -13,6 +14,7 @@ func NewMQTTConfigFromFile(section *ini.Section) *MQTTConfig {
 		panic("invalid MQTT port")
 	}
 	cfg := &MQTTConfig{
+		Topic: section.Key("topic").String(),,
 		Broker: section.Key("broker").String(),
 		Port:   port,
 	}
@@ -23,7 +25,7 @@ func NewMQTTConfigFromFile(section *ini.Section) *MQTTConfig {
 }
 
 func (i *MQTTConfig) isValid() bool {
-	if i.Broker == "" || i.Port == 0 {
+	if i.Broker == "" || i.Topic == "" || i.Port == 0 {
 		return false
 	}
 	return true
